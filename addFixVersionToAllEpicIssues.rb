@@ -6,8 +6,8 @@ require 'net/https'
 require 'rubygems'
 require 'json'
 
-def update_fix_version(http, login, password, fix_version, issueId)
-	update_fix_version_request = Net::HTTP::Put.new("/rest/api/2/issue/#{issueId}")
+def update_fix_version(http, login, password, fix_version, issue_id)
+	update_fix_version_request = Net::HTTP::Put.new("/rest/api/2/issue/#{issue_id}")
 	update_fix_version_request.basic_auth "#{login}", "#{password}"
 	update_fix_version_request.content_type = 'application/json'
 	update_fix_version_request.body = '{ "update" : { "fixVersions": [	{"add":	{"name": "'+"#{fix_version}"+'" }}]}}'
@@ -37,6 +37,8 @@ fix_version = gets.chomp
 puts "JIRA Epic key that needs to be updated along with the stories and its subtasks: "
 jira_epic_key = gets.chomp
 
+updated_issues_count = 0
+
 get_epic_request = Net::HTTP::Get.new("/rest/api/2/issue/#{jira_epic_key}")
 get_epic_request.basic_auth "#{login}", "#{password}"
 
@@ -49,6 +51,7 @@ epic_name = get_epic_json['fields']['summary']
 puts "Adding fixVersion #{fix_version} to Epic #{jira_epic_key} (#{epic_name})"
 
 update_fix_version http, login, password, fix_version, epic_id
+updated_issues_count += 1
 
 get_stories_request = Net::HTTP::Get.new("/rest/api/2/search?jql='Epic%20Link'%3D#{jira_epic_key}")
 get_stories_request.basic_auth "#{login}", "#{password}"
@@ -73,12 +76,15 @@ for story in stories
 	issue_id = get_issue_json['id']
 	puts "Adding fixVersion #{fix_version} to Story #{jira_issue_key} (#{story['fields']['summary']})"
 	update_fix_version http, login, password, fix_version, issue_id
+	updated_issues_count += 1
 
 	sub_tasks_array = get_issue_json['fields']['subtasks']
 	for sub_task in sub_tasks_array
 		sub_task_id = sub_task['id']
 		puts "Adding fixVersion #{fix_version} to Task #{sub_task['key']} (#{sub_task['fields']['summary']})"
 		update_fix_version http, login, password, fix_version, sub_task_id
+		updated_issues_count += 1
 	end
 end
 
+puts "#{updated_issues_count} issues updated."
