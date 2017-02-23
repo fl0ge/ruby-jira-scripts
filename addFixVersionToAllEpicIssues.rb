@@ -26,16 +26,16 @@ system 'stty -echo'
 password = gets.chomp
 system 'stty echo'
 
-jira_uri = URI.parse(jira_url)
-http = Net::HTTP.new(jira_uri.host, jira_uri.port)
-http.use_ssl = true
-http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-
 puts "Fix version to add: "
 fix_version = gets.chomp
 
 puts "JIRA Epic key that needs to be updated along with the stories and its subtasks: "
 jira_epic_key = gets.chomp
+
+jira_uri = URI.parse(jira_url)
+http = Net::HTTP.new(jira_uri.host, jira_uri.port)
+http.use_ssl = true
+http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
 updated_issues_count = 0
 
